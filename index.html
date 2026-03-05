@@ -29,9 +29,7 @@
       padding:18px;
     }
     .wrap{width:min(980px, 100%); display:grid; gap:14px;}
-    .top{
-      display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;
-    }
+    .top{display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;}
     .title{
       flex:1 1 260px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
@@ -76,14 +74,8 @@
     .pill.good{color:var(--good)}
     .pill.bad{color:var(--bad)}
     .pill.warn{color:var(--warn)}
-    .mid{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:14px;
-    }
-    @media (max-width: 860px){
-      .mid{grid-template-columns:1fr}
-    }
+    .mid{display:grid; grid-template-columns: 1.1fr .9fr; gap:14px;}
+    @media (max-width: 860px){ .mid{grid-template-columns:1fr} }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border:1px solid var(--line);
@@ -120,10 +112,7 @@
       display:grid;
       gap:10px;
     }
-    .big{
-      font-size:15px;
-      line-height:1.45;
-    }
+    .big{font-size:15px; line-height:1.45;}
     .big b{color:var(--text)}
     .log{
       max-height: 360px;
@@ -166,7 +155,7 @@
       <div class="title">
         <h1>007</h1>
         <p>
-          你與電腦同時選一個動作：<b>裝子彈</b>（+1）、<b>射死你</b>（需子彈&gt;0，-1，若對手在裝子彈則必勝）、<b>保護我</b>（不耗子彈，但最多連續兩回合）。
+          你與電腦同時選一個動作：<b>裝子彈</b>（+1）、<b>射死你</b>（需子彈&gt;0，-1，若對手在裝子彈則勝利）、<b>保護我</b>（不耗子彈，但最多連續兩回合）。
         </p>
       </div>
 
@@ -197,13 +186,11 @@
           </div>
           <div class="hint" id="hint">
             點選後才會揭示電腦選擇與回合結果。<br>
-            規則補充（常見玩法）：射擊若對手未保護則擊倒；雙方同時射擊則同歸於盡（平手）。
+            規則補充：若雙方同時「射死你」，則遊戲繼續（但雙方子彈數各 -1）。
           </div>
 
           <div class="reveal">
-            <div class="big" id="revealLine">
-              尚未出手。
-            </div>
+            <div class="big" id="revealLine">尚未出手。</div>
             <div class="row">
               <button class="linkbtn" id="btnReset">重新開始</button>
               <span class="pill" id="ruleNote">電腦為 random bot（但不會選非法動作）</span>
@@ -266,10 +253,7 @@
     els.pGuardStreak.textContent = String(state.player.guardStreak);
     els.bGuardStreak.textContent = String(state.bot.guardStreak);
 
-    // Disable buttons if game is over
     const disabled = state.over;
-
-    // Player valid actions
     const canShoot = state.player.bullets > 0;
     const canGuard = state.player.guardStreak < 2;
 
@@ -306,21 +290,18 @@
     const p = state[who];
     if (action === "SHOOT") return p.bullets > 0;
     if (action === "GUARD") return p.guardStreak < 2;
-    return true; // LOAD always valid
+    return true;
   }
 
-  // random bot, but never chooses an illegal action
   function botChoose(){
     const options = ["LOAD", "SHOOT", "GUARD"].filter(a => isValidMove("bot", a));
     return options[Math.floor(Math.random() * options.length)];
   }
 
   function applyResourceChanges(pAction, bAction){
-    // Update guard streaks (reset if not guarding; increment if guarding)
     state.player.guardStreak = (pAction === "GUARD") ? (state.player.guardStreak + 1) : 0;
     state.bot.guardStreak    = (bAction === "GUARD") ? (state.bot.guardStreak + 1) : 0;
 
-    // Apply bullets: LOAD +1, SHOOT -1, GUARD 0
     if (pAction === "LOAD") state.player.bullets += 1;
     if (bAction === "LOAD") state.bot.bullets += 1;
     if (pAction === "SHOOT") state.player.bullets -= 1;
@@ -328,9 +309,7 @@
   }
 
   function resolve(pAction, bAction){
-    // Determine outcome based on the *simultaneous* actions, using bullets BEFORE applying SHOOT -1.
-    // We'll check legality already; bullets exist for SHOOT.
-    let outcome = "CONTINUE"; // or PLAYER_WIN, BOT_WIN, DRAW
+    let outcome = "CONTINUE";
     let reason = "";
 
     const pShoot = pAction === "SHOOT";
@@ -340,19 +319,18 @@
     const pGuard = pAction === "GUARD";
     const bGuard = bAction === "GUARD";
 
-    // Special rule from prompt: shooting wins if opponent is loading
-    // We'll still respect guarding as a block (common rule); if you want "射裝必勝" even vs guard,
-    // delete the bGuard / pGuard checks below.
+    // 射裝必勝（但若對方有保護，則不算必勝；想改成「不管保護都必勝」可把 !bGuard / !pGuard 拿掉）
     const pShootsLoadedOpponent = pShoot && bLoad && !bGuard;
     const bShootsLoadedOpponent = bShoot && pLoad && !pGuard;
 
-    // General: shoot kills if opponent not guarding (common 007玩法)
+    // 一般射擊：對方沒保護就擊倒
     const pKills = pShoot && !bGuard;
     const bKills = bShoot && !pGuard;
 
     if (pShootsLoadedOpponent && bShootsLoadedOpponent) {
+      // 這情況其實不太會出現（雙方同時裝/射不一致），保留
       outcome = "DRAW";
-      reason = "你們同時射擊，且彼此都在裝子彈（且未保護），同歸於盡。";
+      reason = "你們同時在對手裝子彈時射擊（且未保護），同歸於盡。";
     } else if (pShootsLoadedOpponent) {
       outcome = "PLAYER_WIN";
       reason = "你在對手裝子彈時開槍，直接獲勝！";
@@ -360,20 +338,15 @@
       outcome = "BOT_WIN";
       reason = "電腦在你裝子彈時開槍，你被擊倒。";
     } else if (pShoot && bShoot) {
-      // both shoot: if any side guarding? can't, because action is shoot.
-      outcome = "DRAW";
-      reason = "雙方同時射擊，同歸於盡（平手）。";
-    } else if (pKills && bKills) {
-      // Can happen if one shoots and the other is not guarding, but bKills means bot shoots too; handled above.
-      outcome = "DRAW";
-      reason = "互相擊倒（平手）。";
+      // ✅ 改動：雙方同時射擊 -> 遊戲繼續（子彈會在 applyResourceChanges 扣掉）
+      outcome = "CONTINUE";
+      reason = "雙方同時射擊，互相牽制，遊戲繼續（雙方子彈各 -1）。";
     } else if (pKills && !bKills) {
       outcome = "PLAYER_WIN";
-      reason = bGuard ? "你開槍但對手保護住了（未分勝負）。" : "你開槍擊倒了對手！";
-      // If bGuard then pKills would be false, so this is actual win.
+      reason = "你開槍擊倒了對手！";
     } else if (bKills && !pKills) {
       outcome = "BOT_WIN";
-      reason = pGuard ? "對手開槍但你保護住了（未分勝負）。" : "電腦開槍擊倒了你！";
+      reason = "電腦開槍擊倒了你！";
     } else {
       outcome = "CONTINUE";
       if (pGuard && bGuard) reason = "雙方都在保護，安全度過。";
@@ -398,7 +371,6 @@
   function play(playerAction){
     if (state.over) return;
 
-    // Validate player move (should already be disabled if invalid)
     if (!isValidMove("player", playerAction)) {
       els.revealLine.innerHTML = `⚠️ 你的動作「${ACTIONS[playerAction]}」現在不合法。`;
       return;
@@ -406,19 +378,14 @@
 
     const botAction = botChoose();
 
-    // Resolve based on simultaneous actions
     const { outcome, reason } = resolve(playerAction, botAction);
 
-    // Apply resource changes after outcome is computed
     applyResourceChanges(playerAction, botAction);
 
-    // Reveal
-    const revealText =
+    els.revealLine.innerHTML =
       `你選：<b>${ACTIONS[playerAction]}</b> ｜ 電腦選：<b>${ACTIONS[botAction]}</b><br>` +
       `結果：<b>${escapeHtml(reason)}</b>`;
-    els.revealLine.innerHTML = revealText;
 
-    // Log entry
     const title = `第 ${state.round} 回合：你 ${ACTIONS[playerAction]}／電腦 ${ACTIONS[botAction]}`;
     let logOutcomeClass = "";
     if (outcome === "PLAYER_WIN") logOutcomeClass = "win";
@@ -426,7 +393,6 @@
     if (outcome === "DRAW") logOutcomeClass = "draw";
     addLog({ title, detail: reason, outcome: logOutcomeClass });
 
-    // End / continue
     if (outcome === "PLAYER_WIN" || outcome === "BOT_WIN" || outcome === "DRAW") {
       endGame(outcome);
     } else {
@@ -450,13 +416,11 @@
     render();
   }
 
-  // Wire up
   els.btnLoad.addEventListener("click",  () => play("LOAD"));
   els.btnShoot.addEventListener("click", () => play("SHOOT"));
   els.btnGuard.addEventListener("click", () => play("GUARD"));
   els.btnReset.addEventListener("click", reset);
 
-  // init
   reset();
 })();
 </script>
