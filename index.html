@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>007（互動小遊戲）</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --card2:#0f1730;
+      --text:#e8ecff;
+      --muted:#aab3d6;
+      --good:#4ade80;
+      --bad:#fb7185;
+      --warn:#fbbf24;
+      --line:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:radial-gradient(1200px 700px at 30% 10%, #1a2550 0%, var(--bg) 55%, #060916 100%);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      display:flex;
+      min-height:100vh;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .wrap{width:min(980px, 100%); display:grid; gap:14px;}
+    .top{
+      display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;
+    }
+    .title{
+      flex:1 1 260px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .title h1{margin:0 0 6px; font-size:22px; letter-spacing:.5px}
+    .title p{margin:0; color:var(--muted); line-height:1.35; font-size:14px}
+    .panel{
+      flex:1 1 320px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px 16px;
+      display:grid;
+      gap:10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .badge{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      color:var(--muted);
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .pill{
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+    }
+    .pill.good{color:var(--good)}
+    .pill.bad{color:var(--bad)}
+    .pill.warn{color:var(--warn)}
+    .mid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 860px){
+      .mid{grid-template-columns:1fr}
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{margin:0 0 12px; font-size:16px; color:var(--text)}
+    .actions{display:grid; gap:10px}
+    .btns{display:grid; grid-template-columns:1fr; gap:10px}
+    @media (min-width: 520px){ .btns{grid-template-columns:repeat(3, 1fr)} }
+    button{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 12px;
+      font-weight:700;
+      letter-spacing:.3px;
+      color:var(--text);
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(0,0,0,.22);
+      transition: transform .06s ease, filter .15s ease, opacity .15s ease;
+      text-align:center;
+    }
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.45; cursor:not-allowed; filter:saturate(.6)}
+    .hint{color:var(--muted); font-size:13px; line-height:1.35}
+    .reveal{
+      border-top:1px dashed var(--line);
+      padding-top:12px;
+      margin-top:4px;
+      display:grid;
+      gap:10px;
+    }
+    .big{
+      font-size:15px;
+      line-height:1.45;
+    }
+    .big b{color:var(--text)}
+    .log{
+      max-height: 360px;
+      overflow:auto;
+      padding-right:6px;
+      display:grid;
+      gap:8px;
+    }
+    .entry{
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      line-height:1.35;
+      color:var(--muted);
+    }
+    .entry .t{color:var(--text); font-weight:700}
+    .entry.win{border-color: rgba(74,222,128,.35)}
+    .entry.lose{border-color: rgba(251,113,133,.35)}
+    .entry.draw{border-color: rgba(251,191,36,.35)}
+    .footer{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+      padding:0 2px;
+    }
+    .linkbtn{
+      padding:9px 12px;
+      border-radius:12px;
+      font-weight:700;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">
+        <h1>007</h1>
+        <p>
+          你與電腦同時選一個動作：<b>裝子彈</b>（+1）、<b>射死你</b>（需子彈&gt;0，-1，若對手在裝子彈則必勝）、<b>保護我</b>（不耗子彈，但最多連續兩回合）。
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="row">
+          <span class="badge">回合 <b id="round">1</b></span>
+          <span class="badge">狀態 <span id="statusPill" class="pill">進行中</span></span>
+        </div>
+        <div class="row">
+          <span class="badge">你：子彈 <b id="pBullets">0</b></span>
+          <span class="badge">電腦：子彈 <b id="bBullets">0</b></span>
+        </div>
+        <div class="row">
+          <span class="badge">你連續保護 <b id="pGuardStreak">0</b>/2</span>
+          <span class="badge">電腦連續保護 <b id="bGuardStreak">0</b>/2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="card">
+        <h2>你的動作</h2>
+        <div class="actions">
+          <div class="btns">
+            <button id="btnLoad"  title="子彈 +1">裝子彈</button>
+            <button id="btnShoot" title="需子彈 > 0">射死你</button>
+            <button id="btnGuard" title="最多連續兩回合">保護我</button>
+          </div>
+          <div class="hint" id="hint">
+            點選後才會揭示電腦選擇與回合結果。<br>
+            規則補充（常見玩法）：射擊若對手未保護則擊倒；雙方同時射擊則同歸於盡（平手）。
+          </div>
+
+          <div class="reveal">
+            <div class="big" id="revealLine">
+              尚未出手。
+            </div>
+            <div class="row">
+              <button class="linkbtn" id="btnReset">重新開始</button>
+              <span class="pill" id="ruleNote">電腦為 random bot（但不會選非法動作）</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>回合紀錄</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>提示：當你沒有子彈時，射擊會被禁用；當你已連續保護 2 回合時，保護會被禁用。</span>
+      <span>Made in a single HTML file.</span>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const ACTIONS = {
+    LOAD:  "裝子彈",
+    SHOOT: "射死你",
+    GUARD: "保護我",
+  };
+
+  const els = {
+    round: document.getElementById("round"),
+    statusPill: document.getElementById("statusPill"),
+    pBullets: document.getElementById("pBullets"),
+    bBullets: document.getElementById("bBullets"),
+    pGuardStreak: document.getElementById("pGuardStreak"),
+    bGuardStreak: document.getElementById("bGuardStreak"),
+    btnLoad: document.getElementById("btnLoad"),
+    btnShoot: document.getElementById("btnShoot"),
+    btnGuard: document.getElementById("btnGuard"),
+    btnReset: document.getElementById("btnReset"),
+    revealLine: document.getElementById("revealLine"),
+    log: document.getElementById("log"),
+  };
+
+  const state = {
+    over: false,
+    round: 1,
+    player: { bullets: 0, guardStreak: 0 },
+    bot:    { bullets: 0, guardStreak: 0 },
+  };
+
+  function setPill(text, kind){
+    els.statusPill.textContent = text;
+    els.statusPill.className = "pill" + (kind ? (" " + kind) : "");
+  }
+
+  function render(){
+    els.round.textContent = String(state.round);
+    els.pBullets.textContent = String(state.player.bullets);
+    els.bBullets.textContent = String(state.bot.bullets);
+    els.pGuardStreak.textContent = String(state.player.guardStreak);
+    els.bGuardStreak.textContent = String(state.bot.guardStreak);
+
+    // Disable buttons if game is over
+    const disabled = state.over;
+
+    // Player valid actions
+    const canShoot = state.player.bullets > 0;
+    const canGuard = state.player.guardStreak < 2;
+
+    els.btnLoad.disabled  = disabled;
+    els.btnShoot.disabled = disabled || !canShoot;
+    els.btnGuard.disabled = disabled || !canGuard;
+
+    if (state.over) {
+      els.btnLoad.title = els.btnShoot.title = els.btnGuard.title = "遊戲已結束，請重新開始";
+    } else {
+      els.btnLoad.title  = "子彈 +1";
+      els.btnShoot.title = canShoot ? "消耗 1 子彈射擊" : "你沒有子彈，不能射擊";
+      els.btnGuard.title = canGuard ? "不耗子彈，但最多連續兩回合" : "你已連續保護 2 回合，這回合不能再保護";
+    }
+  }
+
+  function addLog({title, detail, outcome}){
+    const div = document.createElement("div");
+    div.className = "entry" + (outcome ? (" " + outcome) : "");
+    div.innerHTML = `<div class="t">${escapeHtml(title)}</div><div>${escapeHtml(detail)}</div>`;
+    els.log.prepend(div);
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function isValidMove(who, action){
+    const p = state[who];
+    if (action === "SHOOT") return p.bullets > 0;
+    if (action === "GUARD") return p.guardStreak < 2;
+    return true; // LOAD always valid
+  }
+
+  // random bot, but never chooses an illegal action
+  function botChoose(){
+    const options = ["LOAD", "SHOOT", "GUARD"].filter(a => isValidMove("bot", a));
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  function applyResourceChanges(pAction, bAction){
+    // Update guard streaks (reset if not guarding; increment if guarding)
+    state.player.guardStreak = (pAction === "GUARD") ? (state.player.guardStreak + 1) : 0;
+    state.bot.guardStreak    = (bAction === "GUARD") ? (state.bot.guardStreak + 1) : 0;
+
+    // Apply bullets: LOAD +1, SHOOT -1, GUARD 0
+    if (pAction === "LOAD") state.player.bullets += 1;
+    if (bAction === "LOAD") state.bot.bullets += 1;
+    if (pAction === "SHOOT") state.player.bullets -= 1;
+    if (bAction === "SHOOT") state.bot.bullets -= 1;
+  }
+
+  function resolve(pAction, bAction){
+    // Determine outcome based on the *simultaneous* actions, using bullets BEFORE applying SHOOT -1.
+    // We'll check legality already; bullets exist for SHOOT.
+    let outcome = "CONTINUE"; // or PLAYER_WIN, BOT_WIN, DRAW
+    let reason = "";
+
+    const pShoot = pAction === "SHOOT";
+    const bShoot = bAction === "SHOOT";
+    const pLoad  = pAction === "LOAD";
+    const bLoad  = bAction === "LOAD";
+    const pGuard = pAction === "GUARD";
+    const bGuard = bAction === "GUARD";
+
+    // Special rule from prompt: shooting wins if opponent is loading
+    // We'll still respect guarding as a block (common rule); if you want "射裝必勝" even vs guard,
+    // delete the bGuard / pGuard checks below.
+    const pShootsLoadedOpponent = pShoot && bLoad && !bGuard;
+    const bShootsLoadedOpponent = bShoot && pLoad && !pGuard;
+
+    // General: shoot kills if opponent not guarding (common 007玩法)
+    const pKills = pShoot && !bGuard;
+    const bKills = bShoot && !pGuard;
+
+    if (pShootsLoadedOpponent && bShootsLoadedOpponent) {
+      outcome = "DRAW";
+      reason = "你們同時射擊，且彼此都在裝子彈（且未保護），同歸於盡。";
+    } else if (pShootsLoadedOpponent) {
+      outcome = "PLAYER_WIN";
+      reason = "你在對手裝子彈時開槍，直接獲勝！";
+    } else if (bShootsLoadedOpponent) {
+      outcome = "BOT_WIN";
+      reason = "電腦在你裝子彈時開槍，你被擊倒。";
+    } else if (pShoot && bShoot) {
+      // both shoot: if any side guarding? can't, because action is shoot.
+      outcome = "DRAW";
+      reason = "雙方同時射擊，同歸於盡（平手）。";
+    } else if (pKills && bKills) {
+      // Can happen if one shoots and the other is not guarding, but bKills means bot shoots too; handled above.
+      outcome = "DRAW";
+      reason = "互相擊倒（平手）。";
+    } else if (pKills && !bKills) {
+      outcome = "PLAYER_WIN";
+      reason = bGuard ? "你開槍但對手保護住了（未分勝負）。" : "你開槍擊倒了對手！";
+      // If bGuard then pKills would be false, so this is actual win.
+    } else if (bKills && !pKills) {
+      outcome = "BOT_WIN";
+      reason = pGuard ? "對手開槍但你保護住了（未分勝負）。" : "電腦開槍擊倒了你！";
+    } else {
+      outcome = "CONTINUE";
+      if (pGuard && bGuard) reason = "雙方都在保護，安全度過。";
+      else if (pLoad && bLoad) reason = "雙方都在裝子彈。";
+      else if (pGuard && bLoad) reason = "你保護、對手裝子彈。";
+      else if (pLoad && bGuard) reason = "你裝子彈、對手保護。";
+      else if (pShoot && bGuard) reason = "你開槍，但對手保護住了。";
+      else if (bShoot && pGuard) reason = "對手開槍，但你保護住了。";
+      else reason = "這回合沒有分出勝負。";
+    }
+
+    return { outcome, reason };
+  }
+
+  function endGame(kind){
+    state.over = true;
+    if (kind === "PLAYER_WIN") setPill("你獲勝", "good");
+    else if (kind === "BOT_WIN") setPill("你落敗", "bad");
+    else setPill("平手", "warn");
+  }
+
+  function play(playerAction){
+    if (state.over) return;
+
+    // Validate player move (should already be disabled if invalid)
+    if (!isValidMove("player", playerAction)) {
+      els.revealLine.innerHTML = `⚠️ 你的動作「${ACTIONS[playerAction]}」現在不合法。`;
+      return;
+    }
+
+    const botAction = botChoose();
+
+    // Resolve based on simultaneous actions
+    const { outcome, reason } = resolve(playerAction, botAction);
+
+    // Apply resource changes after outcome is computed
+    applyResourceChanges(playerAction, botAction);
+
+    // Reveal
+    const revealText =
+      `你選：<b>${ACTIONS[playerAction]}</b> ｜ 電腦選：<b>${ACTIONS[botAction]}</b><br>` +
+      `結果：<b>${escapeHtml(reason)}</b>`;
+    els.revealLine.innerHTML = revealText;
+
+    // Log entry
+    const title = `第 ${state.round} 回合：你 ${ACTIONS[playerAction]}／電腦 ${ACTIONS[botAction]}`;
+    let logOutcomeClass = "";
+    if (outcome === "PLAYER_WIN") logOutcomeClass = "win";
+    if (outcome === "BOT_WIN") logOutcomeClass = "lose";
+    if (outcome === "DRAW") logOutcomeClass = "draw";
+    addLog({ title, detail: reason, outcome: logOutcomeClass });
+
+    // End / continue
+    if (outcome === "PLAYER_WIN" || outcome === "BOT_WIN" || outcome === "DRAW") {
+      endGame(outcome);
+    } else {
+      state.round += 1;
+    }
+
+    render();
+  }
+
+  function reset(){
+    state.over = false;
+    state.round = 1;
+    state.player.bullets = 0;
+    state.player.guardStreak = 0;
+    state.bot.bullets = 0;
+    state.bot.guardStreak = 0;
+
+    els.revealLine.textContent = "尚未出手。";
+    els.log.innerHTML = "";
+    setPill("進行中", "");
+    render();
+  }
+
+  // Wire up
+  els.btnLoad.addEventListener("click",  () => play("LOAD"));
+  els.btnShoot.addEventListener("click", () => play("SHOOT"));
+  els.btnGuard.addEventListener("click", () => play("GUARD"));
+  els.btnReset.addEventListener("click", reset);
+
+  // init
+  reset();
+})();
+</script>
+</body>
+</html>
